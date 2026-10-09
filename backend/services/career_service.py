@@ -1,6 +1,7 @@
+from pathlib import Path
 import pandas as pd
 
-excel_path = "data/careers.xlsx"
+excel_path = Path(__file__).resolve().parent.parent / "data" / "careers.xlsx"
 
 
 def load_careers():
