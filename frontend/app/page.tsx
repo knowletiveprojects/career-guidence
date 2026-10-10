@@ -549,33 +549,41 @@ function FontStyle() {
         font-weight: 500;
       }
 
-      .showcase-footer {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-        padding-top: 20px;
-        border-top: 1px solid #eef2f7;
+      .showcase-quote {
+        position: relative;
+        text-align: center;
+        padding: 22px 12px 14px;
+        margin-top: 20px;
+        border-top: 1px solid rgba(129, 140, 248, 0.20);
+        color: #3730a3;
       }
 
-      .showcase-footer div {
-        padding: 12px;
-        border-radius: 12px;
-        background: #f8fafc;
-      }
-
-      .showcase-footer strong {
+      .quote-mark {
         display: block;
-        color: #312e81;
-        font-size: 17px;
-        font-weight: 900;
+        font-family: Georgia, serif;
+        font-size: 42px;
+        line-height: 0.8;
+        color: #8b5cf6;
       }
 
-      .showcase-footer span {
+      .showcase-quote p {
+        margin: 12px 0;
+        font-family: "Segoe Script", "Brush Script MT", "URW Chancery L", cursive;
+        font-size: clamp(17px, 2vw, 23px);
+        font-style: italic;
+        line-height: 1.6;
+        font-weight: 600;
+        color: #3730a3;
+      }
+
+      .quote-author {
         display: block;
-        margin-top: 3px;
-        color: #94a3b8;
-        font-size: 9px;
-        font-weight: 700;
+        margin-top: 10px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #7c3aed;
       }
 
       .showcase-note {
@@ -1278,17 +1286,42 @@ export default function Home() {
     setSearch("");
     setDrafted([]);
     try {
-      const r = await fetch(`${API}/roadmap`, {
+      // Save the student's details first. The backend updates the existing
+      // record for the same mobile number instead of creating duplicates.
+      const saveResponse = await fetch(`${API}/student`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: student.name.trim(),
+          stream: student.stream.toLowerCase(),
+          mobile: student.mobile.trim(),
+          state: student.state.trim(),
+          drafted_careers: "[]",
+          custom_careers: "[]",
+        }),
+      });
+      if (!saveResponse.ok) {
+        const errorData = await saveResponse.json().catch(() => null);
+        throw new Error(errorData?.detail || "Unable to save student details");
+      }
+
+      const roadmapResponse = await fetch(`${API}/roadmap`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ stream: student.stream.toLowerCase() }),
       });
-      if (!r.ok) throw new Error("Roadmap failed");
-      const d = await r.json();
-      setResult(d.data ?? []);
+      if (!roadmapResponse.ok) {
+        const errorData = await roadmapResponse.json().catch(() => null);
+        throw new Error(errorData?.detail || "Roadmap failed");
+      }
+      const data = await roadmapResponse.json();
+      setResult(data.data ?? []);
       setActiveStream(student.stream);
-    } catch {
-      alert("Error Generating Career Roadmap");
+      setSaved(true);
+      window.setTimeout(() => setSaved(false), 3000);
+    } catch (error) {
+      console.error("Generate roadmap failed:", error);
+      alert(error instanceof Error ? error.message : "Error Generating Career Roadmap");
     } finally {
       setLoading(false);
     }
@@ -1491,19 +1524,14 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="showcase-footer">
-                  <div>
-                    <strong>6</strong>
-                    <span>Career streams</span>
-                  </div>
-                  <div>
-                    <strong>01</strong>
-                    <span>Guided journey</span>
-                  </div>
-                  <div>
-                    <strong>PDF</strong>
-                    <span>Roadmap report</span>
-                  </div>
+                <div className="showcase-quote">
+                  <span className="quote-mark" aria-hidden="true">“</span>
+                  <p>
+                    Your dreams are the destination;
+                    <br />
+                    your choices are the journey.
+                  </p>
+                  <span className="quote-author">— Knowletive</span>
                 </div>
               </div>
 
@@ -1761,16 +1789,6 @@ export default function Home() {
 
 
               <div className="form-actions" style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-
-                <button onClick={saveStudent}
-
-                  style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 26px", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer", border: "1.5px solid",
-
-                    ...(saved ? { background: "#ecfdf5", borderColor: "#6ee7b7", color: "#059669" } : { background: "#f0fdf4", borderColor: "#bbf7d0", color: "#15803d" }) }}>
-
-                  {saved ? "✅ Saved!" : "💾 Save Student"}
-
-                </button>
 
                 <button onClick={getRoadmap} disabled={loading}
 
