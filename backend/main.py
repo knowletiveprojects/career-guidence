@@ -27,6 +27,7 @@ app.add_middleware(
         "https://career-guidence-delta.vercel.app",
         "https://career-guidence-topaz.vercel.app",
         "https://career-guidence-alo1ifsk9-akash-gaikwad-s-projects.vercel.app",
+        "https://career.knowletive.in",
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST"],
